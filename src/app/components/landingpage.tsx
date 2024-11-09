@@ -1,5 +1,5 @@
 'use client'
-
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -66,9 +66,30 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="text-2xl font-bold"
         >
-          GoalTracker
+          <h1 className="font-extrabold font-mono inline-flex items-center text-4xl">
+    <span className="bg-gradient-to-bl from-blue-500 to-purple-600 bg-clip-text text-transparent">
+      Cracke
+    </span>
+    <Image
+      src="/cracked.png"
+      width={15}
+      height={15}
+      alt="fuzzie logo"
+      className="shadow-sm mx-0.5 -mb-1"
+    />
+    <span 
+      className="relative bg-gradient-to-bl from-blue-500 to-purple-600 bg-clip-text text-transparent"
+      style={{ 
+        transform: 'rotate(12deg)',
+        transformOrigin: 'bottom left',
+        display: 'inline-block'
+      }}
+    >
+      d
+    </span>
+  </h1>
         </motion.div>
-        <nav className="hidden md:flex space-x-4">
+        <nav className="hidden md:flex rounded-full bg-black  space-x-4">
           {['features', 'how-it-works', 'testimonials'].map((item) => (
             <Link key={item} href={`#${item}`}>
               <motion.div
@@ -194,7 +215,7 @@ export default function LandingPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg" onClick={() => router.push('/auth')}>
               Start Tracking Now <ArrowRight className="ml-2" />
             </Button>
           </motion.div>
