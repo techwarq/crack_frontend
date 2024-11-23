@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -34,7 +35,7 @@ export default function Goals() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [newTitle, setNewTitle] = useState<string>("");
   const [newDescription, setNewDescription] = useState<string>("");
-
+  const router = useRouter(); 
 
 
   useEffect(() => {
@@ -72,7 +73,13 @@ export default function Goals() {
     } catch (error) {
       
     }
+    
   }
+
+  const handleGoalClick = (id: string) => {
+    // Navigate to the topics page for the selected goal
+    router.push(`/goals/${id}/topics`);
+  };
   
 
   
@@ -138,7 +145,7 @@ export default function Goals() {
             
           </header>
 
-          <div className="container cursor-pointer mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10 px-4">
+          <div className="container  cursor-pointer mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10 px-4">
             {goals.length > 0 ? (
               goals.map((goal) => (
                 <motion.div
@@ -146,7 +153,7 @@ export default function Goals() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="p-4 bg-purple-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-purple-600/20 transition-all"
+                  className="p-4 bg-purple-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-purple-600/20 transition-all" onClick={() => handleGoalClick(goal.id)}
                 >
                   <h3 className="text-2xl font-semibold">{goal.title}</h3>
                   <p className="text-gray-300">{goal.description}</p>

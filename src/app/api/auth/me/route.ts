@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     // Make a request to the backend's `me` endpoint to get user info
-    const response = await fetch('http://localhost:4005/api/auth/me', {
+    const response = await fetch('http://localhost:4007/api/auth/me', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

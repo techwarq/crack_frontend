@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const response = await fetch('http://localhost:4005/api/auth/signup', {
+    const response = await fetch('http://localhost:4007/api/auth/signup', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     // After signup, let's also log them in
-    const loginResponse = await fetch('http://localhost:4005/api/auth/login', {
+    const loginResponse = await fetch('http://localhost:4007/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
