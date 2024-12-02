@@ -1,59 +1,77 @@
-import React from 'react';
-import { ListTodo, Type, Image, FileText, Layout, Calendar, Bookmark } from 'lucide-react';
-import { ComponentType, SidebarProps } from '../types/sidebar';
+import React, { useState } from "react";
+import { ListTodo, ListCollapse, CircleHelp, Plus } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog"; // Assuming DialogContent is part of your Dialog component
 
-const componentTypes: ComponentType[] = [
-  { id: 'todo', icon: ListTodo, label: 'Todo List' },
-  { id: 'text', icon: Type, label: 'Text Block' },
-  { id: 'image', icon: Image, label: 'Image' },
-  { id: 'note', icon: FileText, label: 'Note' },
-  { id: 'layout', icon: Layout, label: 'Layout' },
-  { id: 'calendar', icon: Calendar, label: 'Calendar' },
-  { id: 'bookmark', icon: Bookmark, label: 'Bookmark' }
+const menuItems = [
+  {
+    icon: ListTodo,
+    text: "Todolist",
+    disabled: false,
+  },
+  {
+    icon: ListCollapse,
+    text: "Subtopics",
+    disabled: false,
+  },
+  {
+    icon: CircleHelp,
+    text: "Question",
+    disabled: false,
+  },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ isDragging, handleDragStart, handleDragEnd }) => {
-  return (
-    <div className="w-20 bg-gray-900 border-r border-gray-800 p-3 flex flex-col gap-4">
-      <div className="flex justify-center mb-4">
-        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-          <Layout size={24} className="text-white" />
-        </div>
-      </div>
-      
-      <div className="space-y-4">
-        {componentTypes.map((component) => {
-          const IconComponent = component.icon;
-          return (
-            <div
-              key={component.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, component.id)}
-              onDragEnd={handleDragEnd}
-              className="group relative"
-            >
-              <div className={`p-3 bg-gray-800 rounded-xl cursor-move 
-                           hover:bg-gray-700 transition-all duration-200
-                           border border-transparent hover:border-purple-500
-                           flex items-center justify-center
-                           transform hover:scale-105
-                           ${isDragging ? 'opacity-50' : ''}`}>
-                <IconComponent 
-                  size={22} 
-                  className="text-gray-400 group-hover:text-purple-400 transition-colors duration-200" 
-                />
-              </div>
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-xs text-gray-200 
-                            rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                            pointer-events-none whitespace-nowrap">
-                {component.label}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+export default function Sidebar() {
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-export default Sidebar;
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  return (
+    <>
+      <div>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <div className="hidden lg:flex fixed top-0 left-0 h-screen w-full p-4 items-center pointer-events-none z-[39]">
+            <div className="pointer-events-auto group flex w-16 text-white text-[16px] font-medium flex-col items-start gap-6 overflow-hidden rounded-[20px] border-2 border-gray-700 bg-gray-900 px-4 py-6 hover:w-40 duration-200 z-[99999]">
+              <div className="border-b border-gray-700 pb-4 w-full">
+                <DialogTrigger
+                  className="flex w-full text-yellow-300 hover:text-yellow-400 focus:text-yellow-400 cursor-pointer items-center gap-3 px-2 duration-200 justify-start"
+                  onClick={() => setDialogOpen(true)} // Opening dialog
+                >
+                  <Plus className="text-yellow-300" />
+                  <p className="opacity-0 duration-200 group-hover:opacity-100">
+                    Add
+                  </p>
+                </DialogTrigger>
+              </div>
+              {menuItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 hover:text-yellow-300 duration-200"
+                >
+                  <item.icon className="text-white" size={24} />
+                  <p className="opacity-0 duration-200 group-hover:opacity-100 text-white">
+                    {item.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogContent className="bg-gray-800 text-white">
+            {/* Add dialog content here */}
+            <div>
+              <p>Dialog content goes here</p>
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                onClick={handleDialogClose}
+              >
+                Close
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
+  );
+}
