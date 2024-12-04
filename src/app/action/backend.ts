@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 
+
 type Goal = {
     id: string;
     title: string;
@@ -16,7 +17,23 @@ type Topic = {
    // The user associated with the topic (nullable)
    
   };
+
+
+  type TodoItem = {
+    id: string;
+    title: string;
+    description?: string;
+    isCompleted: boolean;
+    todoListId: string;
+  };
   
+  type TodoList = {
+    id: string;
+    title: string;
+    description?: string;
+    topicId: string;
+    items: TodoItem[];
+  };
 export const getGoals = async (): Promise<Goal[]> => {
     try {
         const token = (await cookies()).get('token')?.value; // Example: retrieve token from localStorage or cookies
@@ -128,3 +145,59 @@ export const postTopics = async (goalId: string, title: string, description: str
         throw error;
     }
 };
+
+export const postTodo = async (
+    topicId: string,
+    goalId: string,
+    listTitle: string,
+    listDescription: string,
+    items: { title: string; description?: string; isCompleted: boolean }[]
+  ): Promise<TodoList | null> => {
+    try {
+      const token = (await cookies()).get('token')?.value;
+      
+      const response = await fetch(`http://localhost:4007/api/me/goals/${goalId}/topics/${topicId}/todolist`, {
+        method: 'POST',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+        body: JSON.stringify({ title: listTitle, description: listDescription, items }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to create todo list: ${response.status}`);
+      }
+  
+      return await response.json() as TodoList;
+    } catch (error) {
+      console.error("Failed to create todo list:", error);
+      return null;
+    }
+  };
+  
+  export const getTodo = async (topicId: string, goalId: string,): Promise<TodoList[]> => {
+    try {
+      const token = (await cookies()).get('token')?.value;
+  
+      const response = await fetch(`http://localhost:4007/api/me/goals/${goalId}/topics/${topicId}/todolist`, {
+        method: 'GET',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to fetch todo lists: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      return Array.isArray(data) ? data as TodoList[] : [];
+    } catch (error) {
+      console.error("Failed to fetch todo lists:", error);
+      return [];
+    }
+  };

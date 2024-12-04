@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react';
-import Sidebar from '../components/sidebar';
+import React from 'react';
+import Sidebar from '../../components/sidebar';
 
 
 export default function PlayGround() {
