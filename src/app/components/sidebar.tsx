@@ -7,6 +7,7 @@ const menuItems = [
     icon: ListTodo,
     text: "Todolist",
     disabled: false,
+    onClick: addTodo,
   },
   {
     icon: ListCollapse,
@@ -22,6 +23,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addTodo, setaddTodo] = useState('');
 
   const handleDialogClose = () => {
     setDialogOpen(false);
