@@ -1,25 +1,40 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, MouseEvent } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, Move } from 'lucide-react';
 
-const TodoList = () => {
-  const [title, setTitle] = useState('My Todo List');
-  const [todos, setTodos] = useState([
+// Define the shape of a Todo item
+interface Todo {
+  id: string;
+  content: string;
+}
+
+// Define the shape of the card's position
+interface Position {
+  x: number;
+  y: number;
+}
+
+const TodoList: React.FC = () => {
+  const [title, setTitle] = useState<string>('My Todo List');
+  const [todos, setTodos] = useState<Todo[]>([
     { id: 'todo-1', content: 'Learn React' },
     { id: 'todo-2', content: 'Build a project' },
   ]);
-  const [newTodo, setNewTodo] = useState('');
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const cardRef = useRef(null);
+  const [newTodo, setNewTodo] = useState<string>('');
+  const [draggedItem, setDraggedItem] = useState<Todo | null>(null);
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Card Drag Handlers
-  const handleCardMouseDown = (e) => {
+  const handleCardMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     setIsDragging(true);
     const card = cardRef.current;
+    
+    if (!card) return;
+    
     const cardRect = card.getBoundingClientRect();
     
     // Calculate offset to prevent card jumping
@@ -29,7 +44,7 @@ const TodoList = () => {
     card.style.position = 'fixed';
     card.style.cursor = 'grabbing';
     
-    const moveCard = (moveEvent) => {
+    const moveCard = (moveEvent: MouseEvent) => {
       setPosition({
         x: moveEvent.clientX - offsetX,
         y: moveEvent.clientY - offsetY
@@ -38,20 +53,22 @@ const TodoList = () => {
     
     const stopMoving = () => {
       setIsDragging(false);
-      card.style.cursor = 'grab';
-      document.removeEventListener('mousemove', moveCard);
-      document.removeEventListener('mouseup', stopMoving);
+      if (card) {
+        card.style.cursor = 'grab';
+      }
+      document.removeEventListener('mousemove', moveCard as unknown as EventListener);
+      document.removeEventListener('mouseup', stopMoving as EventListener);
     };
     
-    document.addEventListener('mousemove', moveCard);
-    document.addEventListener('mouseup', stopMoving);
+    document.addEventListener('mousemove', moveCard as unknown as EventListener);
+    document.addEventListener('mouseup', stopMoving as EventListener);
   };
 
   // Todo list functionality
   const addTodo = () => {
     if (!newTodo.trim()) return;
     
-    const newTodoItem = {
+    const newTodoItem: Todo = {
       id: `todo-${Date.now()}`,
       content: newTodo
     };
@@ -60,11 +77,11 @@ const TodoList = () => {
     setNewTodo('');
   };
 
-  const removeTodo = (id) => {
+  const removeTodo = (id: string) => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
 
-  const handleTodoReorder = (draggedTodo, targetTodo) => {
+  const handleTodoReorder = (draggedTodo: Todo, targetTodo: Todo) => {
     const newTodos = [...todos];
     const dragItemIndex = newTodos.findIndex(todo => todo.id === draggedTodo.id);
     const dropItemIndex = newTodos.findIndex(todo => todo.id === targetTodo.id);
@@ -112,7 +129,7 @@ const TodoList = () => {
         </div>
         
         <div className="space-y-2">
-          {todos.map((todo, index) => (
+          {todos.map((todo) => (
             <div
               key={todo.id}
               draggable
