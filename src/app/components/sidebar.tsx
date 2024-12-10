@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { ListTodo, ListCollapse, CircleHelp, Plus } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog"; // Assuming DialogContent is part of your Dialog component
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import TodoList from "./TodoList";
 
 const menuItems = [
   {
     icon: ListTodo,
     text: "Todolist",
-    disabled: false,
-    onClick: addTodo,
+    component: TodoList,
   },
   {
     icon: ListCollapse,
@@ -23,7 +23,14 @@ const menuItems = [
 
 export default function Sidebar() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [addTodo, setaddTodo] = useState('');
+  const [activeItem, setActiveItem] = useState<React.ComponentType | undefined>(
+    menuItems[0].component
+  );
+
+
+  const handleSetActive = (component: React.ComponentType | undefined) => {
+    setActiveItem(() => component);
+  };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -38,7 +45,7 @@ export default function Sidebar() {
               <div className="border-b border-gray-700 pb-4 w-full">
                 <DialogTrigger
                   className="flex w-full text-yellow-300 hover:text-yellow-400 focus:text-yellow-400 cursor-pointer items-center gap-3 px-2 duration-200 justify-start"
-                  onClick={() => setDialogOpen(true)} // Opening dialog
+                  onClick={() => setDialogOpen(true)}
                 >
                   <Plus className="text-yellow-300" />
                   <p className="opacity-0 duration-200 group-hover:opacity-100">
@@ -49,7 +56,8 @@ export default function Sidebar() {
               {menuItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 hover:text-yellow-300 duration-200"
+                  onClick={() => handleSetActive(item.component)}
+                  className="flex items-center gap-3 hover:text-yellow-300 duration-200 cursor-pointer"
                 >
                   <item.icon className="text-white" size={24} />
                   <p className="opacity-0 duration-200 group-hover:opacity-100 text-white">
@@ -73,6 +81,11 @@ export default function Sidebar() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Main Content */}
+        <div className="p-6">
+          {activeItem && React.createElement(activeItem)}
+        </div>
       </div>
     </>
   );
