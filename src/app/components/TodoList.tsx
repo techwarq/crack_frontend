@@ -1,8 +1,11 @@
+'use client'
+
 import React, { useState, useRef, MouseEvent } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, Move } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 // Define the shape of a Todo item
 interface Todo {

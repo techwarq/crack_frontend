@@ -1,13 +1,26 @@
-import React, { useState } from "react";
-import { ListTodo, ListCollapse, CircleHelp, Plus } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import TodoList from "./TodoList";
+import React, { useState } from 'react';
+import { LucideIcon, ListTodo, ListCollapse, CircleHelp, Plus } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
+import TodoList from './TodoList'; // Ensure this component is available
 
-const menuItems = [
+// Define the type for the menu item
+interface MenuItem {
+  icon: LucideIcon;
+  text: string;
+  component?: React.ComponentType;
+  disabled?: boolean;
+}
+
+interface SidebarProps {
+  selectedItem: MenuItem;
+  setSelectedItem: (item: MenuItem) => void; // Ensure this function is passed correctly
+}
+
+const menuItems: MenuItem[] = [
   {
     icon: ListTodo,
     text: "Todolist",
-    component: TodoList,
+    component: () => <TodoList/>// Set the component to render when selected
   },
   {
     icon: ListCollapse,
@@ -21,19 +34,19 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
+const Sidebar: React.FC<SidebarProps> = ({
+  selectedItem,
+   setSelectedItem = () => {},
+}) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<React.ComponentType | undefined>(
-    menuItems[0].component
-  );
 
-
-  const handleSetActive = (component: React.ComponentType | undefined) => {
-    setActiveItem(() => component);
-  };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
+  };
+
+  const handleSelectedItem = (item: MenuItem) => {
+    setSelectedItem(item);
   };
 
   return (
@@ -56,8 +69,10 @@ export default function Sidebar() {
               {menuItems.map((item, index) => (
                 <div
                   key={index}
-                  onClick={() => handleSetActive(item.component)}
-                  className="flex items-center gap-3 hover:text-yellow-300 duration-200 cursor-pointer"
+                  onClick={() => !item.disabled && handleSelectedItem(item)} // Use the function handleSelectedItem to update selectedItem
+                  className={`flex items-center gap-3 hover:text-yellow-300 duration-200 cursor-pointer ${
+                    item.disabled ? 'opacity-50 cursor-not-allowed' : ''
+                  } ${selectedItem && selectedItem.text === item.text ? 'bg-gray-700' : ''}`}
                 >
                   <item.icon className="text-white" size={24} />
                   <p className="opacity-0 duration-200 group-hover:opacity-100 text-white">
@@ -69,7 +84,6 @@ export default function Sidebar() {
           </div>
 
           <DialogContent className="bg-gray-800 text-white">
-            {/* Add dialog content here */}
             <div>
               <p>Dialog content goes here</p>
               <button
@@ -81,12 +95,9 @@ export default function Sidebar() {
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Main Content */}
-        <div className="p-6">
-          {activeItem && React.createElement(activeItem)}
-        </div>
       </div>
     </>
   );
-}
+};
+
+export default Sidebar;
