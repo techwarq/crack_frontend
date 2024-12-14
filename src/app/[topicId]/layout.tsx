@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react';
-import Sidebar from '../../components/sidebar'; // Your Sidebar Component
+import Sidebar from '../components/sidebar'; // Your Sidebar Component
+import { TodoContextProvider } from '../context/TodolistContext';
  // Optional toast notifications
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -12,8 +13,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     
       <div>
-         <Sidebar />
-        {children}</div>
+        <TodoContextProvider>
+        {children}
+        </TodoContextProvider></div>
       
      
     

@@ -2,42 +2,14 @@ import React, { useState } from 'react';
 import { LucideIcon, ListTodo, ListCollapse, CircleHelp, Plus } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
 import TodoList from './TodoList'; // Ensure this component is available
+import { TodoContextProvider, useTodoContext } from '../context/TodolistContext';
+import AddTodoBtn from './AddTodoIcon';
 
 // Define the type for the menu item
-interface MenuItem {
-  icon: LucideIcon;
-  text: string;
-  component?: React.ComponentType;
-  disabled?: boolean;
-}
 
-interface SidebarProps {
-  selectedItem: MenuItem;
-  setSelectedItem: (item: MenuItem) => void; // Ensure this function is passed correctly
-}
 
-const menuItems: MenuItem[] = [
-  {
-    icon: ListTodo,
-    text: "Todolist",
-    component: () => <TodoList/>// Set the component to render when selected
-  },
-  {
-    icon: ListCollapse,
-    text: "Subtopics",
-    disabled: false,
-  },
-  {
-    icon: CircleHelp,
-    text: "Question",
-    disabled: false,
-  },
-];
-
-const Sidebar: React.FC<SidebarProps> = ({
-  selectedItem,
-   setSelectedItem = () => {},
-}) => {
+const Sidebar = () =>{
+  const { goalId, topicId } = useTodoContext();
   const [dialogOpen, setDialogOpen] = useState(false);
 
 
@@ -45,9 +17,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     setDialogOpen(false);
   };
 
-  const handleSelectedItem = (item: MenuItem) => {
-    setSelectedItem(item);
-  };
 
   return (
     <>
@@ -64,22 +33,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <p className="opacity-0 duration-200 group-hover:opacity-100">
                     Add
                   </p>
+
+              
                 </DialogTrigger>
               </div>
-              {menuItems.map((item, index) => (
-                <div
-                  key={index}
-                  onClick={() => !item.disabled && handleSelectedItem(item)} // Use the function handleSelectedItem to update selectedItem
-                  className={`flex items-center gap-3 hover:text-yellow-300 duration-200 cursor-pointer ${
-                    item.disabled ? 'opacity-50 cursor-not-allowed' : ''
-                  } ${selectedItem && selectedItem.text === item.text ? 'bg-gray-700' : ''}`}
-                >
-                  <item.icon className="text-white" size={24} />
-                  <p className="opacity-0 duration-200 group-hover:opacity-100 text-white">
-                    {item.text}
-                  </p>
-                </div>
-              ))}
+              <AddTodoBtn topicId={topicId} goalId={goalId}/>
+              
             </div>
           </div>
 
