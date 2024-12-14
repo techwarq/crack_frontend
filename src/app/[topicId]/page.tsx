@@ -11,7 +11,7 @@ import { useTodoContext } from '../context/TodolistContext';
 
 
 export default function PlayGround() {
-  const { goalId, topicId } = useTodoContext();
+  const { topicId } = useTodoContext();
 
 
   return (
@@ -25,7 +25,7 @@ export default function PlayGround() {
       <Sidebar />
         <div className="flex-1 p-4">
           {/* Include TodoList component here */}
-          <TodoList topicId={topicId} goalId={goalId} />
+          <TodoList topicId={topicId}  />
         </div>
         </div>
       </div>

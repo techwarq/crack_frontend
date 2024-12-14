@@ -1,24 +1,22 @@
-import React, { createContext, useReducer, useContext } from "react";
-import { TodoList } from "../types/Tdolist"; // Assuming you have the correct types for TodoList
+'use client'
+import React, { createContext, useReducer, useContext, useMemo, useCallback } from "react";
+import { TodoList } from "../types/Tdolist"; // Ensure this type is correctly imported
 import { getTodoLists, postTodoList } from "../action/backend";
 
-// Define the context
+// Define the context type
 export const TodoContext = createContext<{
   todoLists: TodoList[];
-  goalId: string;
   topicId: string;
   dispatch: React.Dispatch<TodoAction>;
   addTodoList: (
     topicId: string,
-    goalId: string,
     title: string,
     description: string,
     items: { title: string; isCompleted?: boolean }[]
   ) => Promise<void>;
-  fetchTodoLists: (topicId: string, goalId: string) => Promise<void>;
+  fetchTodoLists: (topicId: string) => Promise<void>;
 }>({
   todoLists: [],
-  goalId: "",
   topicId: "",
   dispatch: () => {},
   addTodoList: async () => {},
@@ -31,13 +29,11 @@ type TodoAction =
   | { type: "ADD_TODO_LIST"; payload: TodoList }
   | { type: "REMOVE_TODO_LIST"; payload: string }
   | { type: "UPDATE_TODO_LIST"; payload: TodoList }
-  | { type: "SET_GOAL_ID"; payload: string }
   | { type: "SET_TOPIC_ID"; payload: string };
 
-// State type that will hold todoLists, goalId, and topicId
+// State interface
 interface TodoState {
   todoLists: TodoList[];
-  goalId: string;
   topicId: string;
 }
 
@@ -60,8 +56,6 @@ const todoReducer = (state: TodoState, action: TodoAction): TodoState => {
           list.id === action.payload.id ? action.payload : list
         ),
       };
-    case "SET_GOAL_ID":
-      return { ...state, goalId: action.payload };
     case "SET_TOPIC_ID":
       return { ...state, topicId: action.payload };
     default:
@@ -75,51 +69,60 @@ export const TodoContextProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(todoReducer, {
     todoLists: [],
-    goalId: "",
     topicId: "",
   });
 
-  // Add a new todo list
-  const addTodoList = async (
+  // Memoized add todo list function
+  const addTodoList = useCallback(async (
     topicId: string,
-    goalId: string,
     title: string,
     description: string,
     items: { title: string; isCompleted?: boolean }[]
   ) => {
     try {
-      const newTodoList = await postTodoList(topicId, goalId, title, description, items);
+      const newTodoList = await postTodoList(topicId, title, description, items);
       if (newTodoList) {
         dispatch({ type: "ADD_TODO_LIST", payload: newTodoList });
       }
     } catch (error) {
       console.error("Failed to add todo list:", error);
     }
-  };
+  }, []);
 
-  // Fetch todo lists
-  const fetchTodoLists = async (topicId: string, goalId: string) => {
+  // Memoized fetch todo lists function
+  const fetchTodoLists = useCallback(async (topicId: string) => {
+    // Optional: Add a check to prevent unnecessary fetches
+    if (state.todoLists.length > 0 && state.topicId === topicId) {
+      return; // Skip fetching if lists are already loaded for this topic
+    }
+
     try {
-      const lists = await getTodoLists(topicId, goalId);
+      const lists = await getTodoLists(topicId);
       if (lists) {
         dispatch({ type: "SET_TODO_LISTS", payload: lists });
+        dispatch({ type: "SET_TOPIC_ID", payload: topicId });
       }
     } catch (error) {
       console.error("Failed to fetch todo lists:", error);
     }
-  };
+  }, [state.todoLists.length, state.topicId]);
+
+  // Memoized context value
+  const contextValue = useMemo(() => ({
+    todoLists: state.todoLists,
+    topicId: state.topicId,
+    dispatch,
+    addTodoList,
+    fetchTodoLists,
+  }), [
+    state.todoLists, 
+    state.topicId, 
+    addTodoList, 
+    fetchTodoLists
+  ]);
 
   return (
-    <TodoContext.Provider
-      value={{
-        todoLists: state.todoLists,
-        goalId: state.goalId,
-        topicId: state.topicId,
-        dispatch,
-        addTodoList,
-        fetchTodoLists,
-      }}
-    >
+    <TodoContext.Provider value={contextValue}>
       {children}
     </TodoContext.Provider>
   );

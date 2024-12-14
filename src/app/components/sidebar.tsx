@@ -9,7 +9,7 @@ import AddTodoBtn from './AddTodoIcon';
 
 
 const Sidebar = () =>{
-  const { goalId, topicId } = useTodoContext();
+  const { topicId } = useTodoContext();
   const [dialogOpen, setDialogOpen] = useState(false);
 
 
@@ -37,7 +37,7 @@ const Sidebar = () =>{
               
                 </DialogTrigger>
               </div>
-              <AddTodoBtn topicId={topicId} goalId={goalId}/>
+              <AddTodoBtn topicId={topicId} />
               
             </div>
           </div>

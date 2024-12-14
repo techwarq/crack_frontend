@@ -8,10 +8,9 @@ import { TodoItem } from "../types/Tdolist"
 
 interface TodoListProps {
   topicId: string
-  goalId: string
 }
 
-export default function TodoList({ topicId, goalId }: TodoListProps) {
+export default function TodoList({ topicId }: TodoListProps) {
   const { todoLists, addTodoList, fetchTodoLists } = useTodoContext()
 
   const [listTitle, setListTitle] = React.useState("")
@@ -20,8 +19,8 @@ export default function TodoList({ topicId, goalId }: TodoListProps) {
   ])
 
   React.useEffect(() => {
-    fetchTodoLists(topicId, goalId)
-  }, [topicId, goalId, fetchTodoLists])
+    fetchTodoLists(topicId)
+  }, [topicId, fetchTodoLists])
 
   const handleAddTodoList = async () => {
     if (!listTitle.trim()) {
@@ -30,7 +29,7 @@ export default function TodoList({ topicId, goalId }: TodoListProps) {
     }
 
     const validItems = items.filter(item => item.title.trim())
-    await addTodoList(topicId, goalId, listTitle, "", validItems)
+    await addTodoList(topicId, listTitle, "", validItems)
 
     setListTitle("")
     setItems([{ title: "", isCompleted: false }])
@@ -129,4 +128,3 @@ export default function TodoList({ topicId, goalId }: TodoListProps) {
     </div>
   )
 }
-

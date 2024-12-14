@@ -146,41 +146,52 @@ export const postTopics = async (goalId: string, title: string, description: str
         throw error;
     }
 };
+
+
 export const postTodoList = async (
   topicId: string,
-  goalId: string,
   listTitle: string,
   listDescription: string,
   items: { title: string; isCompleted?: boolean }[]
 ): Promise<TodoList | null> => {
   try {
     const token = (await cookies()).get('token')?.value;
+    
+    if (!token) {
+      console.error('No authentication token found');
+      return null;
+    }
 
     const response = await fetch(
-      `http://localhost:4007/api/me/goals/${goalId}/topics/${topicId}/todolist`,
+      `http://localhost:4007/api/me/topics/${topicId}/todolist`,  // Removed goalId from URL
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           title: listTitle,
           description: listDescription,
-          items,
+          items: items.map(item => ({
+            title: item.title,
+            isCompleted: item.isCompleted || false
+          }))
         }),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to create todo list: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Post Todo List Error: ${response.status} - ${errorText}`);
+      return null;
     }
 
-    const newTodoList = await response.json() as TodoList;
-
-    // Add goalId to the response if it's missing
-    return { ...newTodoList, goalId };
+    const newTodoList = await response.json();
+    return {
+      ...newTodoList,
+      topicId  // Return only the topicId here
+    };
   } catch (error) {
     console.error("Failed to create todo list:", error);
     return null;
@@ -188,34 +199,41 @@ export const postTodoList = async (
 };
 
 export const getTodoLists = async (
-  topicId: string,
-  goalId: string
+  topicId: string
 ): Promise<TodoList[]> => {
   try {
     const token = (await cookies()).get('token')?.value;
+    
+    if (!token) {
+      console.error('No authentication token found');
+      return [];
+    }
 
     const response = await fetch(
-      `http://localhost:4007/api/me/goals/${goalId}/topics/${topicId}/todolist`,
+      `http://localhost:4007/api/me/topics/${topicId}/todolist`,  // Removed goalId from URL
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        cache: 'no-store', // Disable caching to always fetch fresh data
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch todo lists: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Get Todo Lists Error: ${response.status} - ${errorText}`);
+      return [];
     }
 
-    const data = await response.json();
-
-    // Ensure goalId is added to each list
-    return Array.isArray(data)
-      ? data.map((list: TodoList) => ({ ...list, goalId }))
-      : [];
+    const todoLists = await response.json();
+    
+    // Enhance each todo list with additional context
+    return todoLists.map((list: TodoList) => ({
+      ...list,
+      topicId  // Return only the topicId here
+    }));
   } catch (error) {
     console.error("Failed to fetch todo lists:", error);
     return [];

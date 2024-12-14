@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button";
 
 interface AddTodoBtnProps {
   topicId: string;
-  goalId: string;
+  
 }
 
-const AddTodoBtn: React.FC<AddTodoBtnProps> = ({ topicId, goalId }) => {
+const AddTodoBtn: React.FC<AddTodoBtnProps> = ({ topicId,  }) => {
   const { addTodoList, } = useTodoContext();
 
   const handleAddTodo = async () => {
     try {
-      await addTodoList(topicId, goalId, "", "", []);
+      await addTodoList(topicId, "", "", []);
     } catch (error) {
       console.error("Failed to add todo list:", error);
     }
