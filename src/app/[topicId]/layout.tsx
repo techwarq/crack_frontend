@@ -1,23 +1,21 @@
 'use client'
 
 import React from 'react';
-import Sidebar from '../components/sidebar'; // Your Sidebar Component
-import { TodoContextProvider } from '../context/TodolistContext';
- // Optional toast notifications
+ // Correct import path
+ // Sidebar component
+import { PageContent } from '../../components/pageComponent'; // Example content component
+import { NavigationProvider } from '../context/NavigationContext';
+import Sidebar from '../components/sidebar';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-   
-     
-     
-
-    
-      <div>
-        <TodoContextProvider>
-        {children}
-        </TodoContextProvider></div>
+    <NavigationProvider>
       
-     
-    
+        <Sidebar />
+        <div >
+          {children} {/* Render the child components here */}
+        </div>
+      
+    </NavigationProvider>
   );
 }

@@ -1,18 +1,36 @@
 'use client'
 
-import React, { useState } from 'react';
-import { LucideIcon, ListTodo, ListCollapse, CircleHelp, Plus } from 'lucide-react';
-import Sidebar from '../components/sidebar';
-import TodoList from '../components/TodoList';
-import { useTodoContext } from '../context/TodolistContext';
-
-
-// Define menuItems here
-
+import React from 'react';
+import { useParams } from 'next/navigation';
+import { ListTodo, ListCollapse, CircleHelp, Plus } from 'lucide-react';
+import { PageContent } from '../components/pageComponent';
 
 export default function PlayGround() {
-  const { topicId } = useTodoContext();
+  const params = useParams();
+  
+  // Handle different parameter types and ensure we return a string or undefined
+  const getTopicId = (): string | undefined => {
+    if (!params) return undefined;
+    
+    // If params.topicId exists and is a string, use it
+    if (typeof params.topicId === 'string') {
+      return params.topicId;
+    }
+    
+    // If params[0] exists and is a string, use it
+    if (typeof params[0] === 'string') {
+      return params[0];
+    }
+    
+    // If params.topicId is an array, use the first element
+    if (Array.isArray(params.topicId) && params.topicId.length > 0) {
+      return params.topicId[0];
+    }
+    
+    return undefined;
+  };
 
+  const topicId = getTopicId();
 
   return (
     <div className="min-h-screen bg-gray-900 text-white overflow-hidden">
@@ -21,14 +39,10 @@ export default function PlayGround() {
 
       {/* Main content */}
       <div className="relative z-10 flex h-screen">
-        
-      <Sidebar />
-        <div className="flex-1 p-4">
-          {/* Include TodoList component here */}
-          <TodoList topicId={topicId}  />
-        </div>
+        <div className="flex-1 pl-7">
+          <PageContent topicId={topicId} />
         </div>
       </div>
-   
+    </div>
   );
 }

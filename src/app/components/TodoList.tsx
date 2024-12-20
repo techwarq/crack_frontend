@@ -1,130 +1,210 @@
-'use client'
+"use client";
 
-import * as React from "react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { useTodoContext } from "../context/TodolistContext"
-import { TodoItem } from "../types/Tdolist"
+import React, { useEffect, useState, useCallback } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getTodoLists, postTodoList } from "../action/backend";
+import { v4 as uuidv4 } from "uuid"; // Import uuid
 
-interface TodoListProps {
-  topicId: string
+export interface TodoItem {
+  id: string;
+  title: string;
+  isCompleted: boolean;
 }
 
-export default function TodoList({ topicId }: TodoListProps) {
-  const { todoLists, addTodoList, fetchTodoLists } = useTodoContext()
+export interface TodoList {
+  id: string;
+  title: string;
+  description: string;
+  items: TodoItem[];
+  topicId: string;
+}
 
-  const [listTitle, setListTitle] = React.useState("")
-  const [items, setItems] = React.useState<TodoItem[]>([
-    { title: "", isCompleted: false }
-  ])
+const generateUniqueId = (): string => uuidv4();
 
-  React.useEffect(() => {
-    fetchTodoLists(topicId)
-  }, [topicId, fetchTodoLists])
+interface EditableTodoListProps {
+  topicId: string; // Accept topicId as a prop
+}
 
-  const handleAddTodoList = async () => {
-    if (!listTitle.trim()) {
-      alert("Please enter a list title")
-      return
-    }
+const EditableTodoList: React.FC<EditableTodoListProps> = ({ topicId }) => {
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const validItems = items.filter(item => item.title.trim())
-    await addTodoList(topicId, listTitle, "", validItems)
+  const fetchTodos = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      if (!topicId) throw new Error("Topic ID is missing.");
 
-    setListTitle("")
-    setItems([{ title: "", isCompleted: false }])
-  }
-
-  const updateItem = (index: number, updates: Partial<TodoItem>) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], ...updates }
-    setItems(newItems)
-  }
-
-  const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index))
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      if (index === items.length - 1) {
-        setItems([...items, { title: "", isCompleted: false }])
+      const todoLists = await getTodoLists(topicId);
+      if (todoLists.length > 0) {
+        const latestList = todoLists[0];
+        setTitle(latestList.title ?? "");
+        setDescription(latestList.description ?? "");
+        setTodos(
+          (latestList.items ?? []).map((item) => ({
+            id: item.id ?? generateUniqueId(),
+            title: item.title ?? "",
+            isCompleted: item.isCompleted ?? false,
+          }))
+        );
+      } else {
+        setTitle("");
+        setDescription("");
+        setTodos([{ id: generateUniqueId(), title: "", isCompleted: false }]);
       }
-      setTimeout(() => {
-        const nextInput = document.getElementById(`todo-${index + 1}`)
-        if (nextInput) nextInput.focus()
-      }, 0)
-    } else if (e.key === 'Backspace' && items[index].title === '' && items.length > 1) {
-      e.preventDefault()
-      removeItem(index)
-      setTimeout(() => {
-        const prevInput = document.getElementById(`todo-${index - 1}`)
-        if (prevInput) prevInput.focus()
-      }, 0)
+    } catch (err) {
+      setError("Failed to fetch todo lists. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  }, [topicId]);
+
+  useEffect(() => {
+    if (topicId) {
+      fetchTodos();
+    }
+  }, [topicId, fetchTodos]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value ?? "");
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(e.target.value ?? "");
+  };
+
+  const handleTodoChange = (id: string, newTitle: string) => {
+    setTodos(todos.map((todo) =>
+      todo.id === id ? { ...todo, title: newTitle } : todo
+    ));
+  };
+
+  const toggleTodo = (id: string) => {
+    setTodos(todos.map((todo) =>
+      todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
+    ));
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    index: number
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const newTodo: TodoItem = { id: generateUniqueId(), title: "", isCompleted: false };
+      const newTodos = [
+        ...todos.slice(0, index + 1),
+        newTodo,
+        ...todos.slice(index + 1),
+      ];
+      setTodos(newTodos);
+
+      setTimeout(() => {
+        const nextInput = document.getElementById(`todo-${newTodo.id}`) as HTMLInputElement;
+        nextInput?.focus();
+      }, 0);
+    } else if (e.key === "Backspace" && todos[index].title === "") {
+      e.preventDefault();
+      if (todos.length > 1) {
+        const newTodos = todos.filter((todo) => todo.id !== id);
+        setTodos(newTodos);
+
+        setTimeout(() => {
+          const prevInput = document.getElementById(`todo-${todos[index - 1]?.id}`) as HTMLInputElement;
+          prevInput?.focus();
+        }, 0);
+      }
+    }
+  };
+
+  const saveTodoList = async () => {
+    try {
+      setIsLoading(true);
+      if (!topicId) throw new Error("Topic ID is missing.");
+
+      const nonEmptyTodos = todos.filter((todo) => todo.title.trim() !== "");
+      await postTodoList(
+        topicId,
+        title.trim(),
+        description.trim(),
+        nonEmptyTodos.map((todo) => ({
+          title: todo.title,
+          isCompleted: todo.isCompleted,
+        }))
+      );
+      fetchTodos();
+    } catch (err) {
+      setError("An error occurred while saving. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="w-72 p-4 bg-zinc-900 rounded-lg">
+      {isLoading && <div className="text-white">Loading...</div>}
+      {error && <div className="text-red-500 mb-2">{error}</div>}
       <input
         type="text"
-        value={listTitle}
-        onChange={(e) => setListTitle(e.target.value)}
+        value={title}
+        onChange={handleTitleChange}
         placeholder="Title"
-        className="text-2xl font-semibold text-white mb-4 bg-transparent w-full focus:outline-none placeholder:text-zinc-500"
+        className="text-2xl font-semibold text-white mb-2 bg-transparent w-full focus:outline-none placeholder:text-zinc-500"
+        aria-label="Todo List Title"
+      />
+      <input
+        type="text"
+        value={description}
+        onChange={handleDescriptionChange}
+        placeholder="Description"
+        className="text-sm text-zinc-400 mb-4 bg-transparent w-full focus:outline-none placeholder:text-zinc-500"
+        aria-label="Todo List Description"
       />
       <div className="space-y-3">
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
+        {todos.map((todo, index) => (
+          <div key={todo.id} className="flex items-center space-x-2">
             <Checkbox
-              id={`checkbox-${index}`}
-              checked={item.isCompleted}
-              onCheckedChange={(checked) => updateItem(index, { isCompleted: checked as boolean })}
-              className="border-zinc-700 data-[state=checked]:bg-zinc-700 data-[state=checked]:border-zinc-700"
+              id={`checkbox-${todo.id}`}
+              checked={todo.isCompleted}
+              onCheckedChange={() => toggleTodo(todo.id)}
+              className="border-zinc-700 data-[state=checked]:bg-zinc-700"
+              aria-label="Complete todo item"
             />
             <input
-              id={`todo-${index}`}
+              id={`todo-${todo.id}`}
               type="text"
-              value={item.title}
-              onChange={(e) => updateItem(index, { title: e.target.value })}
-              onKeyDown={(e) => handleKeyDown(e, index)}
+              value={todo.title}
+              onChange={(e) => handleTodoChange(todo.id, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, todo.id, index)}
               className={`text-sm bg-transparent w-full focus:outline-none ${
-                item.isCompleted
-                  ? 'line-through text-zinc-500'
-                  : 'text-zinc-200'
+                todo.isCompleted
+                  ? "line-through text-zinc-500"
+                  : "text-zinc-200"
               }`}
-              placeholder={index === items.length - 1 ? "Add a task..." : ""}
+              placeholder={index === todos.length - 1 ? "Add a task..." : ""}
+              aria-label="Todo item input"
             />
           </div>
         ))}
       </div>
-      <Button 
-        onClick={handleAddTodoList}
-        className="mt-4 w-full bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+      <button
+        onClick={saveTodoList}
+        disabled={isLoading}
+        className={`mt-4 px-4 py-2 text-white rounded ${
+          isLoading 
+            ? "bg-zinc-500 cursor-not-allowed" 
+            : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
-        Save List
-      </Button>
-      {todoLists.map((list, idx) => (
-        <div key={idx} className="mt-4 border-t border-zinc-800 pt-4">
-          <h3 className="text-lg font-semibold text-zinc-200">{list.title}</h3>
-          <ul className="mt-2 space-y-2">
-            {list.items.map((item, index) => (
-              <li key={index} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={item.isCompleted}
-                  className="border-zinc-700 data-[state=checked]:bg-zinc-700 data-[state=checked]:border-zinc-700"
-                />
-                <span className={`text-sm ${item.isCompleted ? 'line-through text-zinc-500' : 'text-zinc-200'}`}>
-                  {item.title}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+        {isLoading ? "Saving..." : "Save Todo List"}
+      </button>
     </div>
-  )
-}
+  );
+};
+
+export default EditableTodoList;

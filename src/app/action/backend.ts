@@ -155,13 +155,16 @@ export const postTodoList = async (
   items: { title: string; isCompleted?: boolean }[]
 ): Promise<TodoList | null> => {
   try {
+    
     const token = (await cookies()).get('token')?.value;
     
     if (!token) {
       console.error('No authentication token found');
       return null;
     }
-
+    if (!topicId) {
+      throw new Error("Topic ID is required");
+    }
     const response = await fetch(
       `http://localhost:4007/api/me/topics/${topicId}/todolist`,  // Removed goalId from URL
       {
@@ -207,6 +210,9 @@ export const getTodoLists = async (
     if (!token) {
       console.error('No authentication token found');
       return [];
+    }
+    if (!topicId) {
+      throw new Error("Topic ID is required");
     }
 
     const response = await fetch(
